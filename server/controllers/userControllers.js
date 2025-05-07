@@ -5,7 +5,7 @@ import Stripe from "stripe";
 
 export const getUserData = async (req, res) => {
   try {
-    const userId = user_2wjPOxYli4SgIVvvpQ2jjOu12XR;
+    const userId = req.auth.userId;
     const user = await User.findById(userId);
 
     if (!user) {
