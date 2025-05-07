@@ -20,6 +20,12 @@ await connectCloudinary();
 //Middlewares
 app.use(cors());
 app.use(clerkMiddleware());
+
+
+//webhook route Before express.json
+app.post('/stripe',express.raw({type: 'application/json'}),stripeWebhooks)
+
+
 app.use(express.json());
 
 //Routes
@@ -34,7 +40,6 @@ app.use("/api/course", courseRouter);
 app.use('/api/user', userRouter)
 
 
-app.post('/stripe',express.raw({type: 'application/json'}),stripeWebhooks)
 //Port
 const PORT = process.env.PORT || 5000;
 
