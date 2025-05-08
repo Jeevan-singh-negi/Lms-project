@@ -25,7 +25,7 @@ export const getUserData = async (req, res) => {
 export const userEnrolledCourses = async (req, res) => {
   try {
     const userId = req.auth.userId;
-    const userData = await User.findById(userId).populate("enrolledCourses");
+    const userData = await User.findById(userId).populate('enrolledCourses');
 
     res.json({ success: true, enrolledCourses: userData.enrolledCourses });
   } catch (error) {
@@ -62,7 +62,7 @@ export const purchaseCourse = async (req, res) => {
     //stripe Gateway
 
     const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
-    const currency = process.env.CURRENCY.toLocaleLowerCase();
+    const currency = process.env.CURRENCY.toLowerCase();
 
     // creating line items for stripe
 
@@ -83,7 +83,7 @@ export const purchaseCourse = async (req, res) => {
       success_url: `${origin}/loading/my-enrollments`,
       cancel_url: `${origin}/`,
       line_items: line_items,
-      mode: "payment",
+      mode: 'payment',
       metadata: {
         purchaseId: newPurchase._id.toString(),
       },
@@ -163,13 +163,13 @@ export const addUserRating = async (req, res) => {
       return res.json({success : false , message : "User has not purchased this course."})
      }
 
-     const existingRatingIndex = course.courseRatings.findIndex(r => r.userId === userId)
+     const existingRatingIndex = course.courseRating.findIndex(r => r.userId === userId)
 
      if(existingRatingIndex > -1){
-      course.courseRatings[existingRatingIndex].rating = rating
+      course.courseRating[existingRatingIndex].rating = rating
      }
      else{
-      course.courseRatings.push({
+      course.courseRating.push({
         userId,
         rating
       })

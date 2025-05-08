@@ -7,6 +7,8 @@ import { assets } from "../../assets/assets";
 import humanizeDuration from "humanize-duration";
 import Footer from "../../components/student/Footer";
 import Youtube from "react-youtube";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 function CourseDetails() {
   const { id } = useParams();
@@ -23,15 +25,62 @@ function CourseDetails() {
     calculateChapterTime,
     calculateCourseDuration,
     currency,
+    backendUrl,
+    userData,
+    getToken,
   } = useContext(AppContext);
 
   const fetchCourseData = async () => {
-    const findCourse = allCourses.find((course) => course._id === id);
-    setCourseData(findCourse);
+    try {
+      const { data } = await axios.get(backendUrl + `/api/course/` + id);
+
+      if (data.success) {
+        setCourseData(data.course);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
+
+  const enrollCourse = async () => {
+    try {
+      if (!userData) {
+        return toast.warn("Please login to enroll course");
+      }
+      if (isalreadyEnrolled) {
+        return toast.warn("You are already enrolled in this course");
+      }
+
+      const token = await getToken();
+
+      const { data } = await axios.post(
+        backendUrl + `/api/user/enroll`,
+        { courseId: courseData._id },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      if (data.success) {
+        const { session_url } = data;
+        window.location.replace(session_url);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
   useEffect(() => {
     fetchCourseData();
-  }, [allCourses]);
+  }, []);
+
+  useEffect(() => {
+    if (userData && courseData) {
+      setIsAlreadyEnrolled(userData.enrolledCourses.includes(courseData._id));
+    }
+  }, [userData, courseData]);
 
   const toggleSection = (index) => {
     setOpenSection((prev) => ({
@@ -75,16 +124,25 @@ function CourseDetails() {
               ))}
             </div>
             <p className="text-blue-600">
-              ( {courseData.courseRatings.length}{" "}
-              {courseData.courseRatings.length > 1 ? "ratings" : "rating"})
+              {courseData.courseRatings && courseData.courseRating.length > 0
+                ? `(${courseData.courseRating.length} ${
+                    courseData.courseRating.length > 1 ? "ratings" : "rating"
+                  })`
+                : "(No ratings yet)"}
             </p>
+
             <p>
-              {courseData.enrolledStudents.length}{" "}
-              {courseData.enrolledStudents.length > 1 ? "students" : "student"}{" "}
+              {courseData.enrolledStudents.length}
+              {courseData.enrolledStudents.length > 1
+                ? "students"
+                : "student"}{" "}
             </p>
           </div>
           <p className="text-sm">
-            Course by <span className="text-blue-600 underline">Jugnu</span>
+            Course by{" "}
+            <span className="text-blue-600 underline">
+              {courseData.educator.name}
+            </span>
           </p>
 
           <div className="pt-8 text-gray-800">
@@ -237,7 +295,10 @@ function CourseDetails() {
               </div>
             </div>
 
-            <button className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium">
+            <button
+              onClick={enrollCourse}
+              className="md:mt-6 mt-4 w-full py-3 rounded bg-blue-600 text-white font-medium"
+            >
               {isalreadyEnrolled ? "Enrolled" : "Enroll Now"}
             </button>
 

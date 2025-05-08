@@ -3,6 +3,7 @@ import Course from "../models/Course.js";
 import { v2 as cloudinary } from "cloudinary";
 import Purchase from "../models/Purchase.js";
 import User from "../models/User.js";
+import CourseProgress from "../models/courseProgress.js";
 
 // Update user role to educator
 export const updateRoleToEducator = async (req, res) => {
@@ -63,6 +64,8 @@ export const getEducatorCourses = async (req, res) => {
   }
 };
 
+
+
 //Get Educator Dashboard Data (toatl earning, Enrolled student , no. of courses)
 
 export const educatorDashboardData = async (req, res) => {
@@ -84,7 +87,7 @@ export const educatorDashboardData = async (req, res) => {
       0
     );
 
-    // collect unoque enrolled students ids with thier curse titles
+    // collect unique enrolled students ids with thier curse titles
 
     const enrolledStudentsData = [];
     for (const course of courses) {
@@ -95,7 +98,7 @@ export const educatorDashboardData = async (req, res) => {
         "name imageUrl"
       );
 
-      students.forEach(student => {
+      students.forEach((student) => {
         enrolledStudentsData.push({
           courseTitle: course.courseTitle,
           student,
@@ -117,24 +120,26 @@ export const educatorDashboardData = async (req, res) => {
 export const getEnrolledStudentsData = async (req, res) => {
   try {
     const educator = req.auth.userId;
+
     const courses = await Course.find({ educator });
     const courseIds = courses.map((course) => course._id);
 
     const purchases = await Purchase.find({
-      courseIds: { $in: courseIds },
+      courseId: { $in: courseIds }, // FIXED THIS LINE
       status: "completed",
     })
       .populate("userId", "name imageUrl")
       .populate("courseId", "courseTitle");
 
-    const enrolledStudents = purchases.map(purchase => ({
+    const enrolledStudents = purchases.map((purchase) => ({
       student: purchase.userId,
-      courseTitle: purchase.courseId.courseTitle,
-      purchaseDate: purchase.createdAt
-    }))
+      courseTitle: purchase.courseId?.courseTitle || "Untitled Course",
+      purchaseDate: purchase.createdAt,
+    }));
 
-    res.json({ success: true, enrolledStudent });
+    res.json({ success: true, enrolledStudents });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    console.error("Backend error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };

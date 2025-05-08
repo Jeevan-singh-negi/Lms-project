@@ -4,9 +4,9 @@ import Course from "../models/Course.js";
 
 export const getAllCourses = async (req, res) => {
   try {
-    const courses = await Course.find()
-      .select(["-courseContent", "-enrolledStudents"])
-      .populate({ path: "educator" });
+    const courses = await Course.find({isPublished: true})
+      .select(['-courseContent', '-enrolledStudents'])
+      .populate({ path: 'educator' });
 
     console.log(courses);
     res.json({ success: true, courses });
@@ -23,8 +23,8 @@ export const getCourseId = async (req, res) => {
 
     // remove lectureUrl if priview is not free
 
-    courseData.courseContent.forEach((chapter) => {
-      chapter.chapterContent.forEach((lecture) => {
+    courseData.courseContent.forEach(chapter => {
+      chapter.chapterContent.forEach(lecture => {
         if (!lecture.isPreviewFree) {
           lecture.lectureUrl = "";
         }

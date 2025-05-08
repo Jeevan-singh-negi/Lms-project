@@ -1,9 +1,16 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useContext, useEffect, useRef, useState } from "react";
 import uniqid from "uniqid";
 import Quill from "quill";
 import { assets } from "../../assets/assets";
+import { AppContext } from "../../context/AppContext";
+import { toast } from "react-toastify";
+import axios from "axios";
 
 function AddCourse() {
+
+  const { backendUrl, getToken} = useContext(AppContext)
+
+  
   const quillRef = useRef(null);
   const editorRef = useRef(null);
 
@@ -95,7 +102,44 @@ function AddCourse() {
   };
 
   const handleSubmit = async (e) => {
+    try {
     e.preventDefault();
+      if(!image){
+        toast.error("Please upload course image");
+      }
+      const courseData = {
+        courseTitle,
+        courseDescription: quillRef.current.root.innerHTML,
+        coursePrice:Number(coursePrice),
+        discount: Number(discount),
+        courseContent: chapters
+      }
+
+      const formData = new FormData();
+      formData.append("image", image);
+      formData.append("courseData", JSON.stringify(courseData));
+
+      const token = await getToken();
+      const { data } = await axios.post(
+        backendUrl + `/api/educator/add-course`,
+        formData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      if (data.success) {
+        toast.success(data.message);
+        setCourseTitle("");
+        setCoursePrice(0);
+        setDiscount(0);
+        setImage(null);
+        setChapters([]);
+        quillRef.current.root.innerHTML = "";
+      }else{
+        toast.error(data.message);
+      }
+      
+    } catch (error) {
+      toast.error(error.message);
+    }
   };
 
   useEffect(() => {
@@ -191,7 +235,7 @@ function AddCourse() {
                     width={14}
                     alt=""
                     className={`mr-2 cursor-pointer transition-all ${
-                      chapterIndex.collapsed && "rotate-90"
+                      chapter.collapsed && "rotate-90"
                     }`}
                   />
                   <span className="font-semibold">
@@ -208,7 +252,7 @@ function AddCourse() {
                   className="cursor-pointer"
                 />
               </div>
-              {!chapterIndex.collapsed && (
+              {!chapter.collapsed && (
                 <div className="p-4">
                   {chapter.chapterContent.map((lecture, lectureIndex) => (
                     <div

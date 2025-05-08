@@ -23,7 +23,7 @@ export const clerkWebhooks = async (req, res) => {
       case "user.created": {
         const userData = {
           _id: data.id,
-          name: data.first_name + "" + data.last_name,
+          name: data.first_name + " " + data.last_name,
           email: data.email_addresses[0].email_address,
           imageUrl: data.image_url,
         };
@@ -58,7 +58,7 @@ export const clerkWebhooks = async (req, res) => {
 
 const stripeInstance = new Stripe(process.env.STRIPE_SECRET_KEY);
 export const stripeWebhooks = async (req, res) => {
-  const sig = req.headers["stripe-signature"];
+  const sig = req.headers['stripe-signature'];
 
   let event;
 
@@ -76,10 +76,10 @@ export const stripeWebhooks = async (req, res) => {
   switch (event.type) {
     case "payment_intent.succeeded": {
       const paymentIntent = event.data.object;
-      const paymentId = paymentIntent.id;
+      const paymentIntentId = paymentIntent.id;
 
       const session = await stripeInstance.checkout.sessions.list({
-        payment_intent: paymentId,
+        payment_intent: paymentIntentId,
       });
 
       const { purchaseId } = session.data[0].metadata;
@@ -99,17 +99,17 @@ export const stripeWebhooks = async (req, res) => {
       userData.enrolledCourses.push(courseData._id);
       await userData.save();
 
-      purchaseData.status = "Completed";
+      purchaseData.status = 'Completed';
       await purchaseData.save();
       break;
     }
 
     case "payment_intent.payment_failed": {
       const paymentIntent = event.data.object;
-      const paymentId = paymentIntent.id;
+      const paymentIntentId = paymentIntent.id;
 
       const session = await stripeInstance.checkout.sessions.list({
-        payment_intent: paymentId,
+        payment_intent: paymentIntentId,
       });
       const { purchaseId } = session.data[0].metadata;
 

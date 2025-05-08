@@ -26,18 +26,18 @@ app.use(clerkMiddleware());
 app.post('/stripe',express.raw({type: 'application/json'}),stripeWebhooks)
 
 
-app.use(express.json());
+
 
 //Routes
 app.get("/", (req, res) => res.send("API working"));
 
 app.post("/clerk", express.json(), clerkWebhooks);
 
-app.use("/api/educator", educatorRouter);
+app.use("/api/educator",express.json(), educatorRouter);
 
-app.use("/api/course", courseRouter);
+app.use("/api/course",express.json(), courseRouter);
 
-app.use('/api/user', userRouter)
+app.use('/api/user',express.json(), userRouter)
 
 
 //Port
